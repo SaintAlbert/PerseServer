@@ -9,38 +9,36 @@ const Gallery         = Parse.Object.extend('Gallery');
 const MasterKey       = {useMasterKey: true};
 
 module.exports = {
-    beforeSave           : beforeSave,
-    afterSave            : afterSave,
-    afterDelete          : afterDelete,
-    profile              : profile,
-    avatar               : avatar,
-    get                  : get,
-    createUser           : createUser,
-    findUserByEmail      : findUserByEmail,
-    findUserByUsername   : findUserByUsername,
-    getUsers             : getUsers,
-    listUsers            : listUsers,
-    getFacebookListUsers : getFacebookListUsers,
-    updateUser           : updateUser,
-    destroyUser          : destroyUser,
-    saveFacebookPicture  : saveFacebookPicture,
-    follow               : follow,
-    isFollow             : isFollow,
-    getLikers            : getLikers,
-    getFollowers         : getFollowers,
-    getFollowing         : getFollowing,
-    validateUsername     : validateUsername,
-    validateEmail        : validateEmail,
-    updateGalleriesTotal : updateGalleriesTotal,
-    incrementFollowers   : incrementFollowers,
-    incrementFollowing   : incrementFollowing,
-    incrementComment     : incrementComment,
-    decrementComment     : decrementComment,
+    beforeSave:            beforeSave,
+    afterSave:             afterSave,
+    afterDelete:           afterDelete,
+    profile:               profile,
+    avatar:                avatar,
+    get:                   get,
+    createUser:            createUser,
+    findUserByEmail:       findUserByEmail,
+    findUserByUsername:    findUserByUsername,
+    getUsers:              getUsers,
+    listUsers:             listUsers,
+    updateUser:            updateUser,
+    destroyUser:           destroyUser,
+    saveFacebookPicture:   saveFacebookPicture,
+    follow:                follow,
+    isFollow:              isFollow,
+    getLikers:             getLikers,
+    getFollowers:          getFollowers,
+    getFollowing:          getFollowing,
+    validateUsername:      validateUsername,
+    validateEmail:         validateEmail,
+    updateGalleriesTotal:  updateGalleriesTotal,
+    incrementFollowers:    incrementFollowers,
+    incrementFollowing:    incrementFollowing,
+    incrementComment:      incrementComment,
+    decrementComment:      decrementComment,
     incrementAlbumGallery: incrementAlbumGallery,
     decrementAlbumGallery: decrementAlbumGallery,
-    parseUser            : parseUser,
-    updateAvatar         : updateAvatar,
-    changePassword       : changePassword,
+    parseUser:             parseUser,
+    updateAvatar:          updateAvatar,
 };
 
 function beforeSave(req, res) {
@@ -100,12 +98,12 @@ function afterSave(req, res) {
             roleACL.setWriteAccess(user, true);
 
             userData = new Parse.Object('UserData', {
-                user    : user,
-                ACL     : roleACL,
-                name    : user.get('name'),
+                user:     user,
+                ACL:      roleACL,
+                name:     user.get('name'),
                 username: user.get('username'),
-                status  : user.get('status'),
-                photo   : user.get('photo')
+                status:   user.get('status'),
+                photo:    user.get('photo')
             });
 
             // Define type increment
@@ -121,9 +119,9 @@ function afterSave(req, res) {
     if (!user.existed()) {
 
         new Parse.Query(Parse.Role)
-        .equalTo('name', 'Admin')
-        .equalTo('users', userRequesting)
-        .first().then(function (isAdmin) {
+            .equalTo('name', 'Admin')
+            .equalTo('users', userRequesting)
+            .first().then(function (isAdmin) {
 
             if (!isAdmin && user.get('roleName') === 'Admin') {
                 return Parse.Promise.error(new Parse.Error(1, 'Not Authorized'));
@@ -159,64 +157,110 @@ function getLikers(req, res) {
     console.log('getLikers', params);
 
     new Parse.Query('Gallery')
-    .get(params.galleryId)
-    .then(gallery => {
+        .get(params.galleryId)
+        .then(gallery => {
 
-        gallery
-        .relation('likes')
-        .query()
-        .find(MasterKey)
-        .then(data => {
+            gallery
+                .relation('likes')
+                .query()
+                .find(MasterKey)
+                .then(data => {
 
-            let _result = [];
+                    let _result = [];
 
-            if (!data.length) {
-                res.success(_result);
-            }
+                    if (!data.length) {
+                        res.success(_result);
+                    }
 
-            let cb = _.after(data.length, () => {
-                res.success(_result);
-            });
-
-            _.each(data, user => {
-
-                // User Data
-                new Parse.Query('UserData')
-                .equalTo('user', user)
-                .first(MasterKey)
-                .then(userData => {
-
-                    new Parse.Query('Gallery')
-                    .equalTo('user', user)
-                    .limit(3)
-                    .descending('createdAt')
-                    .find()
-                    .then(galleries => {
-
-                        let profile       = UserData.parseUserData(userData);
-                        profile.isFollow  = isFollow ? true : false;
-                        profile.galleries = galleries.map(item => Gallery.parseGallery(item));
-                        _result.push(profile);
-                        cb();
+                    let cb = _.after(data.length, () => {
+                        res.success(_result);
                     });
 
-                }, res.error);
-            });
-            res.success(users);
-        });
+                    _.each(data, user => {
 
-    }, error => res.error);
+                        // User Data
+                        new Parse.Query('UserData')
+                            .equalTo('user', user)
+                            .first(MasterKey)
+                            .then(userData => {
+
+                                new Parse.Query('Gallery')
+                                    .equalTo('user', user)
+                                    .limit(3)
+                                    .descending('createdAt')
+                                    .find()
+                                    .then(galleries => {
+
+                                        let profile       = UserData.parseUserData(userData);
+                                        profile.isFollow  = isFollow ? true : false;
+                                        profile.galleries = galleries.map(item => Gallery.parseGallery(item));
+                                        _result.push(profile);
+                                        cb();
+                                    });
+
+                            }, res.error);
+                    });
+                    res.success(users);
+                });
+
+        }, error => res.error);
 }
 function getFollowers(req, res) {
     const params = req.params;
 
     if (params.username) {
         new Parse.Query(ParseObject)
-        .equalTo('username', params.username)
-        .first(MasterKey)
-        .then(user => {
-            new Parse.Query(UserFollow)
-            .equalTo('to', user)
+            .equalTo('username', params.username)
+            .first(MasterKey)
+            .then(user => {
+                new Parse.Query(UserFollow)
+                    .equalTo('to', user)
+                    .include('user')
+                    .find(MasterKey)
+                    .then(data => {
+
+                        let _result = [];
+
+                        if (!data.length) {
+                            res.success(_result);
+                        }
+
+                        let cb = _.after(data.length, () => {
+                            res.success(_result);
+                        });
+
+                        _.each(data, user => {
+
+                            // User Data
+                            new Parse.Query('UserData')
+                                .equalTo('user', user.attributes.from)
+                                .first(MasterKey)
+                                .then(userData => {
+
+                                    new Parse.Query('Gallery')
+                                        .equalTo('user', user.attributes.from)
+                                        .limit(3)
+                                        .descending('createdAt')
+                                        .find()
+                                        .then(galleries => {
+
+                                            let profile       = UserData.parseUserData(userData);
+                                            profile.isFollow  = isFollow ? true : false;
+                                            profile.galleries = galleries.map(item => Gallery.parseGallery(item));
+                                            console.log('profile', profile);
+                                            _result.push(profile);
+                                            cb();
+                                        });
+
+                                }, res.error);
+                        });
+
+                    }, res.error);
+
+            });
+    } else {
+        new Parse.Query(UserFollow)
+            .equalTo('to', req.user)
             .include('user')
             .find(MasterKey)
             .then(data => {
@@ -235,75 +279,29 @@ function getFollowers(req, res) {
 
                     // User Data
                     new Parse.Query('UserData')
-                    .equalTo('user', user.attributes.from)
-                    .first(MasterKey)
-                    .then(userData => {
+                        .equalTo('user', user.attributes.to)
+                        .first(MasterKey)
+                        .then(userData => {
 
-                        new Parse.Query('Gallery')
-                        .equalTo('user', user.attributes.from)
-                        .limit(3)
-                        .descending('createdAt')
-                        .find()
-                        .then(galleries => {
+                            new Parse.Query('Gallery')
+                                .equalTo('user', user.attributes.to)
+                                .limit(3)
+                                .descending('createdAt')
+                                .find()
+                                .then(galleries => {
 
-                            let profile       = UserData.parseUserData(userData);
-                            profile.isFollow  = isFollow ? true : false;
-                            profile.galleries = galleries.map(item => Gallery.parseGallery(item));
-                            console.log('profile', profile);
-                            _result.push(profile);
-                            cb();
-                        });
+                                    let profile       = UserData.parseUserData(userData);
+                                    profile.isFollow  = isFollow ? true : false;
+                                    profile.galleries = galleries.map(item => Gallery.parseGallery(item));
+                                    console.log('profile', profile);
+                                    _result.push(profile);
+                                    cb();
+                                });
 
-                    }, res.error);
+                        }, res.error);
                 });
 
             }, res.error);
-
-        });
-    } else {
-        new Parse.Query(UserFollow)
-        .equalTo('to', req.user)
-        .include('user')
-        .find(MasterKey)
-        .then(data => {
-
-            let _result = [];
-
-            if (!data.length) {
-                res.success(_result);
-            }
-
-            let cb = _.after(data.length, () => {
-                res.success(_result);
-            });
-
-            _.each(data, user => {
-
-                // User Data
-                new Parse.Query('UserData')
-                .equalTo('user', user.attributes.to)
-                .first(MasterKey)
-                .then(userData => {
-
-                    new Parse.Query('Gallery')
-                    .equalTo('user', user.attributes.to)
-                    .limit(3)
-                    .descending('createdAt')
-                    .find()
-                    .then(galleries => {
-
-                        let profile       = UserData.parseUserData(userData);
-                        profile.isFollow  = isFollow ? true : false;
-                        profile.galleries = galleries.map(item => Gallery.parseGallery(item));
-                        console.log('profile', profile);
-                        _result.push(profile);
-                        cb();
-                    });
-
-                }, res.error);
-            });
-
-        }, res.error);
 
     }
 }
@@ -312,37 +310,37 @@ function getFollowing(req, res) {
     const params = req.params;
 
     findUsername(params.username)
-    .then(user => {
-        new Parse.Query(UserFollow)
-        .equalTo('from', user)
-        .include(['user'])
-        .find(MasterKey)
-        .then(userFollows => {
+        .then(user => {
+            new Parse.Query(UserFollow)
+                .equalTo('from', user)
+                .include(['user'])
+                .find(MasterKey)
+                .then(userFollows => {
 
-            let _result = [];
+                    let _result = [];
 
-            if (!userFollows.length) res.success(_result);
+                    if (!userFollows.length) res.success(_result);
 
-            let cb = _.after(userFollows.length, () => res.success(_result));
+                    let cb = _.after(userFollows.length, () => res.success(_result));
 
-            _.each(userFollows, userFollow => {
+                    _.each(userFollows, userFollow => {
 
-                // User Data
-                new Parse.Query('UserData')
-                .equalTo('user', userFollow.get('to'))
-                .first(MasterKey)
-                .then(userData => {
-                    if (userData) {
-                        let profile = UserData.parseUserData(userData);
-                        _result.push(profile);
-                        cb();
-                    }
+                        // User Data
+                        new Parse.Query('UserData')
+                            .equalTo('user', userFollow.get('to'))
+                            .first(MasterKey)
+                            .then(userData => {
+                                if (userData) {
+                                    let profile = UserData.parseUserData(userData);
+                                    _result.push(profile);
+                                    cb();
+                                }
+                            }).catch(res.error);
+                    });
+
                 }).catch(res.error);
-            });
 
-        }).catch(res.error);
-
-    });
+        });
 }
 
 function follow(req, res) {
@@ -356,50 +354,50 @@ function follow(req, res) {
     }
 
     get(params.userId)
-    .then(toUser => {
+        .then(toUser => {
 
-        new Parse.Query(UserFollow)
-        .equalTo('from', req.user)
-        .equalTo('to', toUser)
-        .first(MasterKey)
-        .then(isFollow => {
+            new Parse.Query(UserFollow)
+                .equalTo('from', req.user)
+                .equalTo('to', toUser)
+                .first(MasterKey)
+                .then(isFollow => {
 
-            if (isFollow) {
-                // unfollow
-                Parse.Promise.when([
-                    isFollow.destroy(),
-                    decrementFollowers(toUser),
-                    decrementFollowing(req.user),
-                ]).then(data => res.success('unfollow'))
-                .catch(res.error);
-            } else {
+                    if (isFollow) {
+                        // unfollow
+                        Parse.Promise.when([
+                            isFollow.destroy(),
+                            decrementFollowers(toUser),
+                            decrementFollowing(req.user),
+                        ]).then(data => res.success('unfollow'))
+                            .catch(res.error);
+                    } else {
 
-                // follow
-                let activity = {
-                    action  : 'is following you',
-                    fromUser: req.user,
-                    toUser  : toUser,
-                };
-                new UserFollow()
-                .set('from', req.user)
-                .set('to', toUser)
-                .set('date', Date())
-                .save(MasterKey)
-                .then(data => {
-                    return Parse.Promise.when([
-                        incrementFollowing(req.user),
-                        incrementFollowers(toUser),
-                        GalleryActivity.create(activity)
-                    ]);
-                }).then(data => {
-                    console.log('data2', data);
-                    res.success('follow');
+                        // follow
+                        let activity = {
+                            action:   'is following you',
+                            fromUser: req.user,
+                            toUser:   toUser,
+                        };
+                        new UserFollow()
+                            .set('from', req.user)
+                            .set('to', toUser)
+                            .set('date', Date())
+                            .save(MasterKey)
+                            .then(data => {
+                                return Parse.Promise.when([
+                                    incrementFollowing(req.user),
+                                    incrementFollowers(toUser),
+                                    GalleryActivity.create(activity)
+                                ]);
+                            }).then(data => {
+                            console.log('data2', data);
+                            res.success('follow');
+                        }).catch(res.error);
+                    }
+
                 }).catch(res.error);
-            }
 
         }).catch(res.error);
-
-    }).catch(res.error);
 
 }
 
@@ -414,15 +412,15 @@ function isFollow(req, res) {
         return res.error('Not Authorized');
     }
     new Parse.Query(UserFollow)
-    .equalTo('from', req.user)
-    .equalTo('to', params.to)
-    .count(data => {
-        if (data > 0) {
-            res.success('following');
-        } else {
-            res.error('not following');
-        }
-    }).catch(error => {
+        .equalTo('from', req.user)
+        .equalTo('to', params.to)
+        .count(data => {
+            if (data > 0) {
+                res.success('following');
+            } else {
+                res.error('not following');
+            }
+        }).catch(error => {
         res.error('not following');
     });
 }
@@ -441,18 +439,18 @@ function profile(req, res) {
     }
 
     findUsername(username)
-    .then(UserData.getByUser)
-    .then(toUser => {
-        new Parse.Query('UserFollow')
-        .equalTo('from', req.user)
-        .equalTo('to', toUser.get('user'))
-        .count(MasterKey)
-        .then(isFollow => {
-            let profile         = UserData.parseUserData(toUser);
-            profile['isFollow'] = isFollow ? true : false;
-            res.success(profile);
+        .then(UserData.getByUser)
+        .then(toUser => {
+            new Parse.Query('UserFollow')
+                .equalTo('from', req.user)
+                .equalTo('to', toUser)
+                .count(MasterKey)
+                .then(isFollow => {
+                    let profile = UserData.parseUserData(toUser);
+                    profile['isFollow'] = isFollow ? true : false;
+                    res.success(profile);
+                }).catch(res.error);
         }).catch(res.error);
-    }).catch(res.error);
 }
 
 function get(userId) {
@@ -472,28 +470,28 @@ function createUser(req, res, next) {
     var user = req.user;
 
     new Parse.Query(Parse.Role)
-    .equalTo('name', 'Admin')
-    .equalTo('users', user)
-    .first().then(function (adminRole) {
+        .equalTo('name', 'Admin')
+        .equalTo('users', user)
+        .first().then(function (adminRole) {
 
         if (!adminRole) {
             return res.error('Not Authorized');
         } else {
 
             new Parse.User()
-            .set('name', data.name)
-            .set('username', data.username)
-            .set('email', data.email)
-            .set('gender', data.password)
-            .set('password', data.password)
-            .set('photo', data.photo)
-            .set('roleName', data.roleName)
-            .signUp()
-            .then(objUser => {
-                objUser.setACL(new Parse.ACL(objUser));
-                objUser.save(null, MasterKey);
-                res.success(objUser);
-            }, error => res.error(error));
+                .set('name', data.name)
+                .set('username', data.username)
+                .set('email', data.email)
+                .set('gender', data.password)
+                .set('password', data.password)
+                .set('photo', data.photo)
+                .set('roleName', data.roleName)
+                .signUp()
+                .then(objUser => {
+                    objUser.setACL(new Parse.ACL(objUser));
+                    objUser.save(null, MasterKey);
+                    res.success(objUser);
+                }, error => res.error(error));
         }
     }, error => res.error(error.message));
 }
@@ -506,48 +504,48 @@ function findUserByUsername(req, res, next) {
     const username = req.params.username;
 
     findUsername(username)
-    .then(UserData.getByUser)
-    .then(res.success)
-    .catch(res.error);
+        .then(UserData.getByUser)
+        .then(res.success)
+        .catch(res.error);
 }
 
 function findUserByEmail(req, res, next) {
     new Parse.Query(Parse.User)
-    .equalTo('email', req.params.email)
-    .first(MasterKey)
-    .then(user => res.success(parseUser(user)))
-    .catch(res.error);
+        .equalTo('email', req.params.email)
+        .first(MasterKey)
+        .then(user => res.success(parseUser(user)))
+        .catch(res.error);
 }
 
 function getUsers(req, res, next) {
     const params = req.params;
     const user   = req.user;
     new Parse.Query(Parse.Role)
-    .equalTo('name', 'Admin')
-    .equalTo('users', user)
-    .first(MasterKey)
-    .then(adminRole => {
+        .equalTo('name', 'Admin')
+        .equalTo('users', user)
+        .first(MasterKey)
+        .then(adminRole => {
 
-        if (!adminRole) {
-            return res.error('Not Authorized');
-        }
+            if (!adminRole) {
+                return res.error('Not Authorized');
+            }
 
-        const query = new Parse.Query(Parse.User);
+            const query = new Parse.Query(Parse.User);
 
-        if (params.filter != '') {
-            query.contains('email', params.filter);
-        }
+            if (params.filter != '') {
+                query.contains('email', params.filter);
+            }
 
-        query.descending('createdAt');
-        query.limit(params.limit);
-        query.skip((params.page * params.limit) - params.limit);
+            query.descending('createdAt');
+            query.limit(params.limit);
+            query.skip((params.page * params.limit) - params.limit);
 
-        return Parse.Promise.when(query.find(MasterKey), query.count(MasterKey));
-    })
-    .then((users, total) => res.success({
-        users: users,
-        total: total
-    }), error => res.error(error.message));
+            return Parse.Promise.when(query.find(MasterKey), query.count(MasterKey));
+        })
+        .then((users, total) => res.success({
+            users: users,
+            total: total
+        }), error => res.error(error.message));
 }
 
 function listUsers(req, res, next) {
@@ -573,151 +571,44 @@ function listUsers(req, res, next) {
     console.log('part 1');
 
     _query
-    .descending('createdAt')
-    .notContainedIn('objectId', [req.user.id])
-    .notContainedIn('roleName', ['admin', 'Admin'])
-    .limit(_limit)
-    .skip((_page * _limit) - _limit)
-    .find(MasterKey)
-    .then(data => {
+        .descending('createdAt')
+        .notContainedIn('objectId', [req.user.id])
+        .notContainedIn('roleName', ['admin', 'Admin'])
+        .limit(_limit)
+        .skip((_page * _limit) - _limit)
+        .find(MasterKey)
+        .then(data => {
 
-        console.log('part 1');
-        let _result = [];
-        // If none result
-        if (!data.length) res.success(_result);
-        // When after result
-        let cb = _.after(data.length, () => res.success(_result));
-        // Each results query
-        _.each(data, user => {
-            //  Is Follow query
-            new Parse.Query(UserFollow)
-            .equalTo('from', req.user)
-            .equalTo('to', user)
-            .count()
-            .then(isFollow => {
-
-                new Parse.Query('Gallery')
-                .equalTo('user', user)
-                .limit(3)
-                .descending('createdAt')
-                .find()
-                .then(galleries => {
-                    let profile       = parseUser(user);
-                    profile.isFollow  = isFollow ? true : false;
-                    profile.galleries = galleries.map(item => require('../class/Gallery').parseGallery(item));
-                    _result.push(profile);
-                    cb();
-                }).catch(res.error);
-            }).catch(res.error);
-        });
-    }).catch(res.error);
-}
-function listUsers(req, res, next) {
-    const _params = req.params;
-    const _page   = req.params.page || 1;
-    const _limit  = req.params.limit || 24;
-
-    let _query = new Parse.Query(Parse.User);
-
-    let text = _params.search;
-    if (text && text.length > 0) {
-        let toLowerCase = w => w.toLowerCase();
-        var words       = _params.search.split(/\b/);
-        words           = _.map(words, toLowerCase);
-        let stopWords   = ['the', 'in', 'and'];
-        words           = _.filter(words, w => w.match(/^\w+$/) && !_.includes(stopWords, w));
-
-        if (words) {
-            _query.containsAll('words', words);
-        }
-
-    }
-    console.log('part 1');
-
-    _query
-    .descending('createdAt')
-    .notContainedIn('objectId', [req.user.id])
-    .notContainedIn('roleName', ['admin', 'Admin'])
-    .limit(_limit)
-    .skip((_page * _limit) - _limit)
-    .find(MasterKey)
-    .then(data => {
-
-        console.log('part 1');
-        let _result = [];
-        // If none result
-        if (!data.length) res.success(_result);
-        // When after result
-        let cb = _.after(data.length, () => res.success(_result));
-        // Each results query
-        _.each(data, user => {
-            //  Is Follow query
-            new Parse.Query(UserFollow)
-            .equalTo('from', req.user)
-            .equalTo('to', user)
-            .count()
-            .then(isFollow => {
-
-                new Parse.Query('Gallery')
-                .equalTo('user', user)
-                .limit(3)
-                .descending('createdAt')
-                .find()
-                .then(galleries => {
-                    let profile       = parseUser(user);
-                    profile.isFollow  = isFollow ? true : false;
-                    profile.galleries = galleries.map(item => require('../class/Gallery').parseGallery(item));
-                    _result.push(profile);
-                    cb();
-                }).catch(res.error);
-            }).catch(res.error);
-        });
-    }).catch(res.error);
-}
-function getFacebookListUsers(req, res, next) {
-    const _params = req.params;
-    const _user   = req.user;
-
-    new Parse.Query(Parse.User)
-    .containedIn('facebook', _params.users)
-    .descending('createdAt')
-    .notContainedIn('objectId', [_user.id])
-    .notContainedIn('roleName', ['admin', 'Admin'])
-    .find(MasterKey)
-    .then(data => {
-
-        console.log('part 1');
-        let _result = [];
-        // If none result
-        if (!data.length) res.success(_result);
-        // When after result
-        let cb = _.after(data.length, () => res.success(_result));
-        // Each results query
-        data.map(user => {
-            //  Is Follow query
-            new Parse.Promise.when([
+            console.log('part 1');
+            let _result = [];
+            // If none result
+            if (!data.length) res.success(_result);
+            // When after result
+            let cb = _.after(data.length, () => res.success(_result));
+            // Each results query
+            _.each(data, user => {
+                //  Is Follow query
                 new Parse.Query(UserFollow)
-                .equalTo('from', _user)
-                .equalTo('to', user)
-                .count(),
-                new Parse.Query('Gallery')
-                .equalTo('user', user)
-                .limit(3)
-                .descending('createdAt')
-                .find()
-            ])
-            .then(data => {
-                let isFollow      = data[0]
-                let galleries     = data[1]
-                let profile       = parseUser(user);
-                profile.isFollow  = isFollow ? true : false;
-                profile.galleries = galleries.map(item => require('../class/Gallery').parseGallery(item));
-                _result.push(profile);
-                cb();
-            }).catch(res.error);
-        });
+                    .equalTo('from', req.user)
+                    .equalTo('to', user)
+                    .count()
+                    .then(isFollow => {
 
-    }).catch(res.error);
+                        new Parse.Query('Gallery')
+                            .equalTo('user', user)
+                            .limit(3)
+                            .descending('createdAt')
+                            .find()
+                            .then(galleries => {
+                                let profile       = parseUser(user);
+                                profile.isFollow  = isFollow ? true : false;
+                                profile.galleries = galleries.map(item => require('../class/Gallery').parseGallery(item));
+                                _result.push(profile);
+                                cb();
+                            }).catch(res.error);
+                    }).catch(res.error);
+            });
+        }).catch(res.error);
 }
 
 function updateAvatar(req, res) {
@@ -737,17 +628,17 @@ function updateUser(req, res, next) {
     var user = req.user;
 
     new Parse.Query(Parse.Role)
-    .equalTo('name', 'Admin')
-    .equalTo('users', user)
-    .first().then(function (adminRole) {
+        .equalTo('name', 'Admin')
+        .equalTo('users', user)
+        .first().then(function (adminRole) {
 
         if (!adminRole) {
             return res.error('Not Authorized');
         }
 
         return new Parse.Query(Parse.User)
-        .equalTo('objectId', data.id)
-        .first(MasterKey);
+            .equalTo('objectId', data.id)
+            .first(MasterKey);
     }).then(objUser => {
 
         objUser.set('name', data.name);
@@ -773,17 +664,17 @@ function destroyUser(req, res, next) {
     var user   = req.user;
 
     new Parse.Query(Parse.Role)
-    .equalTo('name', 'Admin')
-    .equalTo('users', user)
-    .first().then(adminRole => {
+        .equalTo('name', 'Admin')
+        .equalTo('users', user)
+        .first().then(adminRole => {
 
         if (!adminRole) {
             return res.error('Not Authorized');
         }
 
         return new Parse.Query(Parse.User)
-        .equalTo('objectId', params.id)
-        .first(MasterKey);
+            .equalTo('objectId', params.id)
+            .first(MasterKey);
     }).then(objUser => {
 
         if (!objUser) {
@@ -810,48 +701,48 @@ function saveFacebookPicture(req, res, next) {
     let profilePictureUrl = 'https://graph.facebook.com/' + facebook + '/picture';
     let photoFile;
     let params            = {
-        url            : profilePictureUrl,
+        url:             profilePictureUrl,
         followRedirects: true,
-        params         : {type: 'large'}
+        params:          {type: 'large'}
     };
 
     return Parse.Cloud.httpRequest(params)
-    .then(httpResponse => Image.saveImage(httpResponse.buffer.toString('base64')))
-    .then(photo => photoFile = photo)
-    .then(() => user.set({'photo': photoFile}).save(null, {sessionToken: user.getSessionToken()}))
-    .then(() => UserData.getByUser(user))
-    .then(UserData => UserData.set('photo', photoFile).save(null, MasterKey))
-    .then(() => parseUser(user))
-    .then(res.success)
-    .catch(error => res.error(error.message));
+        .then(httpResponse => Image.saveImage(httpResponse.buffer.toString('base64')))
+        .then(photo => photoFile = photo)
+        .then(() => user.set({'photo': photoFile}).save(null, {sessionToken: user.getSessionToken()}))
+        .then(() => UserData.getByUser(user))
+        .then(UserData => UserData.set('photo', photoFile).save(null, MasterKey))
+        .then(() => parseUser(user))
+        .then(res.success)
+        .catch(error => res.error(error.message));
 }
 
 function validateUsername(req, res) {
     new Parse.Query(Parse.User)
-    .equalTo('username', req.params.username)
-    .first(MasterKey)
-    .then(count => {
-        console.log('validateUsername', count);
-        if (count) {
-            res.error(false);
-        } else {
-            res.success(true);
-        }
-    }, res.error);
+        .equalTo('username', req.params.username)
+        .first(MasterKey)
+        .then(count => {
+            console.log('validateUsername', count);
+            if (count) {
+                res.error(false);
+            } else {
+                res.success(true);
+            }
+        }, res.error);
 }
 
 function validateEmail(req, res) {
     new Parse.Query(Parse.User)
-    .equalTo('email', req.params.email)
-    .first(MasterKey)
-    .then(count => {
-        console.log('validateEmail', count);
-        if (count) {
-            res.error(false);
-        } else {
-            res.success(true);
-        }
-    }, res.error);
+        .equalTo('email', req.params.email)
+        .first(MasterKey)
+        .then(count => {
+            console.log('validateEmail', count);
+            if (count) {
+                res.error(false);
+            } else {
+                res.success(true);
+            }
+        }, res.error);
 }
 
 // Album Gallery
@@ -893,18 +784,18 @@ function decrementComment(user) {
 
 function parseUser(user) {
     let obj = {
-        id             : user.id,
-        _id            : user.id,
-        name           : user.get('name'),
-        email          : user.get('email'),
-        username       : user.get('username'),
-        followersTotal : user.get('followersTotal') || 0,
+        id:              user.id,
+        _id:             user.id,
+        name:            user.get('name'),
+        email:           user.get('email'),
+        username:        user.get('username'),
+        followersTotal:  user.get('followersTotal') || 0,
         followingsTotal: user.get('followingsTotal') || 0,
-        galleriesTotal : user.get('galleriesTotal') || 0,
-        status         : user.get('status'),
-        isFollow       : false,
-        galleries      : [],
-        createdAt      : user.createdAt
+        galleriesTotal:  user.get('galleriesTotal') || 0,
+        status:          user.get('status'),
+        isFollow:        false,
+        galleries:       [],
+        createdAt:       user.createdAt
     };
     if (user.get('photo')) {
         obj.photo = user.get('photo').url();
@@ -913,13 +804,3 @@ function parseUser(user) {
 }
 
 
-function changePassword(req, res) {
-    const _params      = req.params;
-    const _user        = req.user;
-    const _password    = _params.password;
-
-    _user.set('password', _password);
-    _user.save();
-    res.success('Password updated');
-
-}

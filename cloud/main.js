@@ -12,8 +12,8 @@ const Dashboard       = require('./class/Dashboard');
 const Push            = require('./class/Push');
 
 // Parse Push Android
-let FIREBASE_SENDER_ID = process.env.FIREBASE_SENDER_ID;
-let FIREBASE_API_KEY   = process.env.FIREBASE_API_KEY;
+let FIREBASE_SENDER_ID  = process.env.FIREBASE_SENDER_ID;
+let FIREBASE_API_KEY = process.env.FIREBASE_API_KEY;
 
 
 // Push
@@ -72,8 +72,6 @@ Parse.Cloud.define('saveFacebookPicture', User.saveFacebookPicture);
 Parse.Cloud.define('validateUsername', User.validateUsername);
 Parse.Cloud.define('validateEmail', User.validateEmail);
 Parse.Cloud.define('updateAvatar', User.updateAvatar);
-Parse.Cloud.define('getFacebookListUsers', User.getFacebookListUsers);
-Parse.Cloud.define('changePassword', User.changePassword);
 
 // Gallery Album
 Parse.Cloud.beforeSave('GalleryAlbum', GalleryAlbum.beforeSave);
