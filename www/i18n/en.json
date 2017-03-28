@@ -76,9 +76,15 @@
   "Public": "Public",
   "Followers": "Followers",
   "Search user": "Search user",
+  "Message": "Message",
+  "Message": "Message",
+  "Subject": "Subject",
   "Report": "Report",
+  "Report photo": "Report photo",
   "Edit photo": "Edit photo",
   "Destroy photo": "Destroy photo",
+  "Destroy chat": "Destroy chat",
+  "You are sure destroy this chat?": "You are sure destroy this chat?",
   "You are sure destroy this photo?": "You are sure destroy this photo?",
   "Upload image": "Upload image",
   "Edit album": "Edit image",
@@ -115,6 +121,7 @@
   "Invite Friends": "Invite Friends",
   "Find Contact": "Find Contact",
   "Account": "Account",
+  "Password changed": "Password changed",
   "Change Password": "Change Password",
   "Change language": "Change language",
   "Settings": "Settings",
@@ -129,5 +136,8 @@
   "Album": "Album",
   "Title": "Title",
   "Description": "Description",
-  "Logout": "Logout"
+  "Logout": "Logout",
+  "is following you": "is following you",
+  "commented on your photo": "commented on your photo",
+  "liked your photo": "liked your photo"
 }
